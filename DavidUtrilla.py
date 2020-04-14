@@ -2,9 +2,26 @@
 #"Usage: {0} <host> <port>"
 
 import sys
+
 from socket import *
 
-def prueba4(msg)
+def prueba4(msg):
+	decodificado=msg.decode()
+	comienzocadena=decodificado.find("'")
+	fincadena=decodificado.find("'",156,)
+	identificador=decodificado[comienzocadena+1:fincadena]
+	print("El valor del final de la cadena es:")
+	print(identificador)
+	
+	sock = socket(AF_INET, SOCK_STREAM)
+	sock.connect(('node1', 10001))
+
+	socket.send(identificador.encode('utf-8'))
+	msg = sock.recv(4096)
+	print(msg)
+	print(msg.decode())
+
+
 
 def prueba3(msg):
 	decodificado=msg.decode()
@@ -36,6 +53,7 @@ def prueba3(msg):
 					j=j+1
 					print(data[x-j])
 				palabra=data[x-j]
+				print("La palabra es:")
 				print(palabra)
 				break
 
@@ -43,14 +61,22 @@ def prueba3(msg):
 			break
 
 	mensaje=palabra+' '+cadena.decode()
+	print("El mensaje es:")
 	print(mensaje)
 	sock.send(mensaje.encode('utf-8'))
-	msg = sock.recv(2048)
+	
+	msg = sock.recv(4096)
 	print("Reply is '{0}'".format(msg.decode()))
-	msg = sock.recv(2048)
-	print("Reply is '{0}'".format(msg.decode()))
-	msg = sock.recv(2048)
-	print("Reply is '{0}'".format(msg.decode()))
+
+	#while que limpia el socket de mensajes antiguos hasta
+	#que encuentra el reto
+	while 1:
+	
+		msg = sock.recv(2048)
+		print("Reply is '{0}'".format(msg.decode()))
+		if msg.decode().find('hallenge')!=-1:
+			break
+	
 	
 	prueba4(msg)
 
@@ -67,15 +93,12 @@ def prueba2(msg):
 	i=0
 	data=''
 	while 1:
-		msg = sock.recv(2048)# si no funcionaquitar el mas y los #
+		msg = sock.recv(2048)
 		msg = msg.decode()
 		data = data+msg
 		if "that's" in msg:
 			break
-		#else:
-			#for x in range(0,len(msg)):
-				#i=i+1
-			#print(i)
+		
 	data=data.split()
 	for x in range(0,len(data)):
 		if data[x]=="that's":
@@ -92,9 +115,16 @@ def prueba2(msg):
 	print(mensaje)
 	sock.send(mensaje.encode('utf-8'))
 		
+	#while que limpia el socket de mensajes antiguos hasta
+	#que encuentra el reto
+	while 1:
+	
+		msg = sock.recv(2048)
+		print("Reply is '{0}'".format(msg.decode()))
+		if msg.decode().find('hallenge')!=-1:
+			break
 
-	msg = sock.recv(2048)
-	print("Reply is '{0}'".format(msg.decode()))
+
 	prueba3(msg)
 
 def prueba1(msg):
@@ -109,7 +139,7 @@ def prueba1(msg):
 	
 	sock.sendto(mensaje.encode('utf-8'),('node1',3000))
 	
-	msg,servidor = sock.recvfrom(2048)
+	msg,servidor = sock.recvfrom(1024)
 	print(msg.decode())
 
 	prueba2(msg)
@@ -120,7 +150,7 @@ def main():
 	
 	sock.connect(('node1', 2000))
    
-	#sock.send(data)
+	
 
 	msg = sock.recv(2048)
 
@@ -131,9 +161,7 @@ def main():
 	prueba1(msg)
 	sock.close()
 
-#if len(sys.argv) != 3:
-	#print(__doc__.format(__file__))
-	#sys.exit(1)
+
 
 try:
 	main()
