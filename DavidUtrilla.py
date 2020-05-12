@@ -4,6 +4,73 @@
 import sys
 import hashlib
 from socket import *
+import struct
+import base64
+
+def sum16(data):
+    if len(data) % 2:
+        data = b'\0' + data
+
+    return sum(struct.unpack('!%sH' % (len(data) // 2), data))
+
+
+def cksum(data):
+    sum_as_16b_words  = sum16(data)
+    sum_1s_complement = sum16(struct.pack('!L', sum_as_16b_words))
+    _1s_complement    = ~sum_1s_complement & 0xffff
+    return _1s_complement
+
+def prueba6(mensaje):
+	decodificado=mensaje.decode()
+	print (decodificado)
+	comienzocadena=decodificado.find(":")
+	fincadena=decodificado.find("\n",1,)
+	identificador=decodificado[comienzocadena+1:fincadena]
+	print("El valor del final de la cadena es:")
+	print(identificador)
+	
+	#rfcstring='https://uclm-arco.github.io/ietf-clone/rfc/rfc'+numero+'.txt'
+
+
+	#no funciona esta prueba
+
+
+
+
+def prueba5(msg):
+	decodificado=msg.decode()
+	comienzocadena=decodificado.find(":")
+	fincadena=decodificado.find("\n",1,)
+	identificador=decodificado[comienzocadena+1:fincadena]
+	print("El valor del final de la cadena es:")
+	print(identificador)
+	
+	sock = socket(AF_INET, SOCK_DGRAM)
+	sock.bind(('',3053))#puerto usado anteriormente=3011
+
+	nombre=bytes('YAP', 'utf-8')#struct.pack("s",'YAP')	
+	tipo=struct.pack(">H",0)
+	code=b'\x00'
+	checksum=struct.pack(">H",0)#lo inicializamos a cero
+
+	payload=base64.b64encode(bytes(identificador, 'utf-8'))
+
+	cabecera=nombre+tipo+code+checksum
+	paquete=cabecera+payload
+	suma=cksum(paquete)
+	
+	checksum=struct.pack(">H",suma)#lo inicializamos a cero
+	
+	paquete=nombre+tipo+code+checksum+payload
+
+	#para enviar
+	sock.sendto(paquete,('node1',7000))
+	msg,servidor = sock.recvfrom(4096)
+	
+	mensaje=base64.b64decode(msg[8:])
+		
+	prueba6(mensaje)
+
 
 def prueba4(msg):
 	decodificado=msg.decode()
@@ -22,9 +89,9 @@ def prueba4(msg):
 
 	tamano=msg.split(b':',1)
 	size=int(tamano[0].decode())
-	print(size)
+	
 	mensaje=tamano[1]
-	print(size)
+	
 
 	while 1:
 		#print("Entro en bucle while")
@@ -60,8 +127,8 @@ def prueba4(msg):
 			break
 	
 	print(msg.decode())
-	msg = sock.recv(4096)
-	
+	#msg = sock.recv(4096)
+	prueba5(msg)
 
 def prueba3(msg):
 	decodificado=msg.decode()
@@ -106,7 +173,7 @@ def prueba3(msg):
 	sock.send(mensaje.encode('utf-8'))
 	
 	msg = sock.recv(4096)
-	print("Reply of reto 3 is '{0}'".format(msg.decode()))
+	
 
 	#while que limpia el socket de mensajes antiguos hasta
 	#que encuentra el reto
