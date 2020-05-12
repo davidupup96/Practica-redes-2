@@ -2,7 +2,7 @@
 #"Usage: {0} <host> <port>"
 
 import sys
-
+import hashlib
 from socket import *
 
 def prueba4(msg):
@@ -16,12 +16,52 @@ def prueba4(msg):
 	sock = socket(AF_INET, SOCK_STREAM)
 	sock.connect(('node1', 10001))
 
-	socket.send(identificador.encode('utf-8'))
+	sock.send(identificador.encode('utf-8'))
 	msg = sock.recv(4096)
-	print(msg)
+	#print(msg)
+
+	tamano=msg.split(b':',1)
+	size=int(tamano[0].decode())
+	print(size)
+	mensaje=tamano[1]
+	print(size)
+
+	while 1:
+		#print("Entro en bucle while")
+		resto=size-len(mensaje)
+		if(resto>4096):
+			mensaje+=sock.recv(4096)
+		else:
+
+			mensaje+=sock.recv(resto)
+			
+			if(resto==0):
+				print('Todo recibido')
+				break
+	print("Salgo del bucle while")			
+	print("Resto:")	
+	print(resto)	
+	print('size:')	
+	print(size)	
+	print('El menssaje es de largo:')
+	print(len(mensaje))
+	sha=hashlib.sha1(mensaje)
+	print('El SHA es:')
+	print(sha.digest())
+	sha=sha.digest()
+	sock.send(sha)#Hexdigest,.encode('ascii')
+	#codigo repetido de otros metodos deberia hacer 
+	#un metodo con este codigo
+	while 1:
+	
+		msg = sock.recv(2048)
+		#print("Reply of reto 4 is '{0}'".format(msg.decode()))
+		if msg.decode().find('hallenge')!=-1:
+			break
+	
 	print(msg.decode())
-
-
+	msg = sock.recv(4096)
+	
 
 def prueba3(msg):
 	decodificado=msg.decode()
@@ -39,14 +79,14 @@ def prueba3(msg):
 		msg = sock.recv(4096)
 		msg = msg.decode()
 		data = data+msg
-		print(data)
+		#print(data)
 		data=data.split()
 		for x in range(0,len(data)):
 			
 					
 			if data[x].isdigit()==True:
 				i=i+int(data[x])
-				print(i)
+				#print(i)
 
 			if i>1300:
 				while data[x-j].isdigit()==True:
@@ -61,25 +101,26 @@ def prueba3(msg):
 			break
 
 	mensaje=palabra+' '+cadena.decode()
-	print("El mensaje es:")
-	print(mensaje)
+	#print("El mensaje es:")
+	#print(mensaje)
 	sock.send(mensaje.encode('utf-8'))
 	
 	msg = sock.recv(4096)
-	print("Reply is '{0}'".format(msg.decode()))
+	print("Reply of reto 3 is '{0}'".format(msg.decode()))
 
 	#while que limpia el socket de mensajes antiguos hasta
 	#que encuentra el reto
 	while 1:
 	
 		msg = sock.recv(2048)
-		print("Reply is '{0}'".format(msg.decode()))
+		#print("Reply of reto 3 is '{0}'".format(msg.decode()))
 		if msg.decode().find('hallenge')!=-1:
 			break
 	
-	
-	prueba4(msg)
+	print(msg.decode())
 
+	prueba4(msg)
+	
 	
 
 def prueba2(msg):
@@ -120,13 +161,13 @@ def prueba2(msg):
 	while 1:
 	
 		msg = sock.recv(2048)
-		print("Reply is '{0}'".format(msg.decode()))
+		#print("Reply of reto 2 is '{0}'".format(msg.decode()))
 		if msg.decode().find('hallenge')!=-1:
 			break
 
-
+	print(msg.decode())
 	prueba3(msg)
-
+	
 def prueba1(msg):
 	
 	decodificado=msg.decode()
@@ -154,10 +195,10 @@ def main():
 
 	msg = sock.recv(2048)
 
-	print("Reply is '{0}'".format(msg.decode()))
+	print("Reply of mainis '{0}'".format(msg.decode()))
 	sock.send("david.utrilla2".encode('utf-8'))
 	msg = sock.recv(2048)
-	print("Reply is '{0}'".format(msg.decode()))
+	print("Reply of main is '{0}'".format(msg.decode()))
 	prueba1(msg)
 	sock.close()
 
